@@ -27,6 +27,7 @@
     '#949FB1', // grey
     '#4D5360'  // dark grey
   ];
+  Chart.defaults.global.defaultColor = Chart.defaults.global.colours[0];
 
   var usingExcanvas = typeof window.G_vmlCanvasManager === 'object' &&
     window.G_vmlCanvasManager !== null &&
@@ -38,12 +39,12 @@
     .provider('ChartJs', ChartJsProvider)
     .factory('ChartJsFactory', ['ChartJs', '$timeout', ChartJsFactory])
     .directive('chartBase', ['ChartJsFactory', function (ChartJsFactory) { return new ChartJsFactory(); }])
-    .directive('chartLine', ['ChartJsFactory', function (ChartJsFactory) { return new ChartJsFactory('Line'); }])
-    .directive('chartBar', ['ChartJsFactory', function (ChartJsFactory) { return new ChartJsFactory('Bar'); }])
-    .directive('chartRadar', ['ChartJsFactory', function (ChartJsFactory) { return new ChartJsFactory('Radar'); }])
-    .directive('chartDoughnut', ['ChartJsFactory', function (ChartJsFactory) { return new ChartJsFactory('Doughnut'); }])
-    .directive('chartPie', ['ChartJsFactory', function (ChartJsFactory) { return new ChartJsFactory('Pie'); }])
-    .directive('chartPolarArea', ['ChartJsFactory', function (ChartJsFactory) { return new ChartJsFactory('PolarArea'); }]);
+    .directive('chartLine', ['ChartJsFactory', function (ChartJsFactory) { return new ChartJsFactory('line'); }])
+    .directive('chartBar', ['ChartJsFactory', function (ChartJsFactory) { return new ChartJsFactory('bar'); }])
+    .directive('chartRadar', ['ChartJsFactory', function (ChartJsFactory) { return new ChartJsFactory('radar'); }])
+    .directive('chartDoughnut', ['ChartJsFactory', function (ChartJsFactory) { return new ChartJsFactory('doughnut'); }])
+    .directive('chartPie', ['ChartJsFactory', function (ChartJsFactory) { return new ChartJsFactory('pie'); }])
+    .directive('chartPolarArea', ['ChartJsFactory', function (ChartJsFactory) { return new ChartJsFactory('polarArea'); }]);
 
   /**
    * Wrapper for chart.js
@@ -190,11 +191,15 @@
               getDataSets(scope.labels, scope.data, scope.series || [], colours) :
               getData(scope.labels, scope.data, colours);
             var options = angular.extend({}, ChartJs.getOptions(type), scope.options);
-
             // Destroy old chart if it exists to avoid ghost charts issue
             // https://github.com/jtblin/angular-chart.js/issues/187
             destroyChart(chart, scope);
-            chart = new ChartJs.Chart(ctx)[type](data, options);
+
+            chart = new ChartJs.Chart(ctx, {
+              type: type,
+              data: data,
+              options: options
+            });
             scope.$emit('create', chart);
 
             // Bind events
@@ -275,12 +280,14 @@
 
     function getColour (colour) {
       return {
-        fillColor: rgba(colour, 0.2),
-        strokeColor: rgba(colour, 1),
+        backgroundColor: rgba(colour, 0.2),
+        borderColor: rgba(colour, 1),
         pointColor: rgba(colour, 1),
-        pointStrokeColor: '#fff',
-        pointHighlightFill: '#fff',
-        pointHighlightStroke: rgba(colour, 0.8)
+        pointBorderColor: '#fff',
+        pointBackgroundColor: rgba(colour, 0.8),
+
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: rgba(colour, 0.8)
       };
     }
 
@@ -332,8 +339,8 @@
 
     function setLegend (elem, chart) {
       var $parent = elem.parent(),
-          $oldLegend = $parent.find('chart-legend'),
-          legend = '<chart-legend>' + chart.generateLegend() + '</chart-legend>';
+        $oldLegend = $parent.find('chart-legend'),
+        legend = '<chart-legend>' + chart.generateLegend() + '</chart-legend>';
       if ($oldLegend.length) $oldLegend.replaceWith(legend);
       else $parent.append(legend);
     }
